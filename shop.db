@@ -1,0 +1,83 @@
+const sqlite3 = require('sqlite3').verbose();
+
+// Create a new database or open the existing one
+const db = new sqlite3.Database('shop.db', (err) => {
+  if (err) {
+    console.error('Error connecting to database:', err.message);
+  } else {
+    console.log('Connected to the SQLite database.');
+  }
+});
+
+const db = new sqlite3.Database('shop.db');
+
+// Execute schema.sql commands to create the tables
+const schema = `
+CREATE TABLE users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT UNIQUE NOT NULL,
+    password TEXT NOT NULL
+);
+
+CREATE TABLE products (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    price REAL NOT NULL,
+    image_url TEXT
+);
+
+CREATE TABLE cart (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    product_id INTEGER NOT NULL,
+    quantity INTEGER DEFAULT 1,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (product_id) REFERENCES products(id)
+);
+
+CREATE TABLE orders (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    address TEXT NOT NULL,
+    payment_details TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+`;
+
+// Run the schema creation commands
+db.exec(schema, (err) => {
+  if (err) {
+    console.error('Error executing schema:', err.message);
+  } else {
+    console.log('Schema created successfully');
+  }
+  db.close();
+});
+
+const db = new sqlite3.Database('shop.db');
+
+// Insert initial data
+const initialData = `
+INSERT INTO products (name, price, image_url) VALUES
+('Laptop', 70000, 'product1.jpeg'),
+('Laptop Bag', 1000, 'product2.jpeg'),
+('Mouse', 500, 'product3.jpeg'),
+('Laptop Camera', 2000, 'product4.jpeg'),
+('Keyboard', 3000, 'product5.jpeg'),
+('Pendrive', 800, 'product6.jpeg'),
+('Laptop Charger', 5000, 'product7.jpeg'),
+('Powerbank', 1500, 'product8.jpeg'),
+('Headphones', 1799, 'product9.jpeg'),
+('Laptop Stand', 399, 'product10.jpeg');
+`;
+
+// Execute the insert query
+db.exec(initialData, (err) => {
+  if (err) {
+    console.error('Error inserting initial data:', err.message);
+  } else {
+    console.log('Initial data inserted successfully');
+  }
+  db.close();
+});
