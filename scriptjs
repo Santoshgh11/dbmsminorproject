@@ -1,0 +1,129 @@
+document.addEventListener('DOMContentLoaded', async () => {
+
+    const productGrid = document.querySelector('.product-grid');
+
+    // Fetch Products and Populate the Grid
+    try {
+        const response = await fetch('http://localhost:5000/products');
+        if (!response.ok) throw new Error('Failed to fetch products');
+        const products = await response.json();
+
+        products.forEach(product => {
+            const productHTML = `
+                <div class="product-item">
+                    <img src="${product.image_url}" alt="${product.name}" width="300" height="200">
+                    <h2>${product.name}</h2>
+                    <p>Price: $${product.price}</p>
+                    <button data-product-id="${product.id}">Add to Cart</button>
+                </div>
+            `;
+            productGrid.innerHTML += productHTML;
+        });
+
+        // Add event listeners for Add to Cart buttons
+        document.querySelectorAll('.product-item button').forEach(button => {
+            button.addEventListener('click', async () => {
+                const userId = 1; // Replace with logged-in user's ID
+                const productId = button.dataset.productId;
+
+                try {
+                    const response = await fetch('http://localhost:5000/add_to_cart', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ user_id: userId, product_id: productId })
+                    });
+
+                    if (response.ok) {
+                        alert('Product added to cart!');
+                    } else {
+                        const error = await response.json();
+                        alert(`Error adding product: ${error.message}`);
+                    }
+                } catch (error) {
+                    console.error('Failed to add product:', error);
+                    alert('Could not add product to cart. Please try again later.');
+                }
+            });
+        });
+    } catch (error) {
+        console.error('Failed to fetch products:', error);
+    }
+
+    // Cart Page: Update Subtotal
+    const quantityInputs = document.querySelectorAll('table input[type="number"]');
+    quantityInputs.forEach(input => {
+        input.addEventListener('change', async function () {
+            const row = this.closest('tr');
+            const price = parseFloat(row.querySelector('td:nth-child(2)').innerText.replace('$', ''));
+            const quantity = parseInt(this.value, 10);
+            const productId = row.dataset.productId;
+
+            try {
+                const response = await fetch('http://localhost:5000/update_cart', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ product_id: productId, quantity })
+                });
+
+                if (response.ok) {
+                    const subtotalCell = row.querySelector('td:nth-child(4)');
+                    subtotalCell.innerText = `$${(price * quantity).toFixed(2)}`;
+                    await updateTotalPrice();
+                } else {
+                    const error = await response.json();
+                    alert(`Error updating cart: ${error.message}`);
+                }
+            } catch (error) {
+                console.error('Failed to update cart:', error);
+                alert('Could not update the cart. Please try again later.');
+            }
+        });
+    });
+
+    async function updateTotalPrice() {
+        const subtotalCells = document.querySelectorAll('table td:nth-child(4)');
+        let total = 0;
+        subtotalCells.forEach(cell => {
+            total += parseFloat(cell.innerText.replace('$', ''));
+        });
+
+        try {
+            const response = await fetch('http://localhost:5000/get_cart_total', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                const { total: updatedTotal } = await response.json();
+                document.querySelector('.summary p:nth-child(1)').innerText = `Total: $${updatedTotal.toFixed(2)}`;
+            } else {
+                const error = await response.json();
+                console.error('Error fetching total price:', error);
+            }
+        } catch (error) {
+            console.error('Failed to fetch total price:', error);
+        }
+    }
+
+    // Form Validation
+    const forms = document.querySelectorAll('form');
+    forms.forEach(form => {
+        form.addEventListener('submit', event => {
+            const inputs = form.querySelectorAll('input, textarea');
+            let isValid = true;
+            inputs.forEach(input => {
+                if (!input.value.trim()) {
+                    alert(`${input.previousElementSibling.innerText} is required.`);
+                    isValid = false;
+                }
+            });
+            if (!isValid) event.preventDefault();
+        });
+    });
+});
