@@ -1,0 +1,33 @@
+<!DOCTYPE html> 
+<html lang="en"> 
+<head> 
+    <meta charset="UTF-8"> 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+    <title>Checkout</title> 
+    <link rel="stylesheet" href="styles.css">
+    
+</head> 
+<body> 
+    <header> 
+        <nav> 
+            <a href="index.html">Home</a> 
+            <a href="cartpage.html">Cart</a> 
+        </nav> 
+    </header> 
+    <main> 
+        <h1>Checkout</h1> 
+        <form> 
+            <label for="name">Name:</label> 
+            <input type="text" id="name" required> 
+            <label for="address">Address:</label> 
+            <textarea id="address" required></textarea> 
+            <label for="phone">Phone:</label> 
+            <input type="tel" id="phone" required> 
+            <label for="payment">Payment Details:</label> 
+            <input type="text" id="payment" required> 
+            <a href="orderstatuspage.html"><button type="submit">Place Order</button> </a>
+        </form> 
+    </main> 
+    <script src="script.js"></script>
+</body> 
+</html>
